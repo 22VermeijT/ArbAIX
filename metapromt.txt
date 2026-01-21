@@ -1,0 +1,461 @@
+Cross-Market Arbitrage & Odds Intelligence Agent (Advisory-Only, Free APIs)
+SYSTEM ROLE
+
+You are Claude, acting as a senior quantitative systems engineer and product-minded full-stack developer.
+Your task is to design and implement a fast, advisory-only arbitrage and odds-intelligence platform using only free, public data sources.
+
+This system must not place bets, must not log into sportsbooks, and must only provide actionable advice to humans.
+
+Your goal is speed + correctness, not exhaustive market coverage.
+
+1. CORE DESIGN CONSTRAINTS (MANDATORY)
+
+You must obey all of the following:
+
+Read-only data only
+
+No betting automation
+
+No sportsbook credentials
+
+No account management
+
+Humans execute all actions
+
+Free APIs and public data only
+
+Fast scan cycles (≤2 seconds per loop)
+
+Violation of any constraint is a failure.
+
+2. SYSTEM OBJECTIVE
+
+The system continuously:
+
+• Aggregates odds from sportsbooks, betting exchanges, and prediction markets
+• Normalizes markets into canonical events
+• Detects arbitrage and +EV opportunities
+• Computes exact stake sizing and fees
+• Outputs clear, step-by-step human instructions
+
+The system acts like a Bloomberg terminal, not a trading bot.
+
+3. TECH STACK (FIXED)
+Backend
+
+Python 3.11+
+
+FastAPI (async, high-performance)
+
+asyncio + aiohttp for concurrency
+
+Pydantic for strict schemas
+
+In-memory caching (no Redis initially)
+
+Frontend
+
+React + Vite
+
+Tailwind CSS
+
+WebSockets for live updates
+
+No heavy state frameworks
+
+Rationale
+
+This stack minimizes latency, maximizes developer speed, and supports real-time advisory workflows.
+
+4. DATA SOURCES (FREE ONLY — PLACEHOLDERS REQUIRED)
+Prediction Markets (Primary Sources)
+Polymarket
+
+Public GraphQL / REST
+
+Order books
+
+Event metadata
+
+POLYMARKET_API_KEY = "PLACEHOLDER"
+
+Kalshi
+KALSHI_API_KEY = "PLACEHOLDER"
+
+Manifold Markets
+MANIFOLD_API_KEY = "PLACEHOLDER"
+
+Betting Exchange (Probability Anchor)
+Betfair (read-only)
+BETFAIR_API_KEY = "PLACEHOLDER"
+
+Sportsbooks (via free aggregators, scraped read-only)
+
+Oddschecker
+
+Vegas Insider
+
+Covers
+
+Rules:
+• No login
+• Rate-limited
+• Cached
+• Public pages only
+
+5. MARKET NORMALIZATION (CRITICAL PATH)
+
+Implement a canonical event model.
+
+Example
+{
+  "event_id": "nba_lakers_vs_celtics_2026_01_20",
+  "sport": "NBA",
+  "market_type": "moneyline",
+  "outcomes": ["Lakers", "Celtics"]
+}
+
+
+Normalize:
+• Team names
+• Market types
+• Odds formats (American → Decimal → Probability)
+
+6. OPPORTUNITY TYPES (ONLY THESE INITIALLY)
+A. Guaranteed Arbitrage
+Sum(implied probabilities) < 1 - total_fees
+
+B. Best Price Detection
+
+Highlight dominant odds across venues.
+
+C. +EV Signals
+
+Use exchange or prediction markets as probability anchors.
+
+7. FEE & RISK MODELING (REQUIRED)
+
+Each venue must define:
+
+VenueFees(
+  trading_fee_pct,
+  settlement_fee,
+  withdrawal_fee
+)
+
+
+All outputs must include fees and worst-case loss.
+
+8. OUTPUT FORMAT (NON-NEGOTIABLE)
+
+Every opportunity must include:
+
+• Exact bet instructions
+• Exact dollar amounts
+• Fees included
+• Expected cashout
+• Profit %
+• Time sensitivity estimate
+
+Example
+Bet $238.17 on Lakers ML at DraftKings (+110)
+Bet $250.00 on Celtics ML at FanDuel (+105)
+
+Guaranteed Profit: $11.23 (0.48%)
+Risk: Low
+Expires in ~45 seconds
+
+9. UI REQUIREMENTS
+Dashboard
+
+Live opportunities feed (sorted by profit)
+
+Detailed instruction panel
+
+Filters (sport, market, min %)
+
+Data freshness indicator
+
+Advisory disclaimer banner
+
+UI must be immediately actionable.
+
+10. IMPLEMENTATION PHASES (FOLLOW IN ORDER)
+PHASE 1 — Core Engine (MVP)
+
+• Polymarket ingestion
+• One sportsbook aggregator
+• Market normalization
+• Arbitrage detection
+• CLI or basic UI
+
+PHASE 2 — UI + Speed
+
+• React dashboard
+• WebSocket updates
+• Sorting + filtering
+• Instruction formatting
+
+PHASE 3 — Expansion
+
+• Add Kalshi
+• Add Betfair
+• +EV calculations
+• Fee modeling improvements
+
+PHASE 4 — Reliability
+
+• Caching optimization
+• Fallback data sources
+• Error handling + logging
+
+11. MONETIZATION ROADMAP (DO NOT IMPLEMENT NOW)
+
+This system is designed to monetize without execution.
+
+Tier 1 — Free
+
+• Delayed alerts
+• Limited markets
+• Lower scan frequency
+
+Tier 2 — Pro ($)
+
+• Real-time alerts
+• Full market coverage
+• +EV analytics
+• Exportable instructions
+
+Tier 3 — Syndicate
+
+• Custom filters
+• API access
+• Historical edge analysis
+
+Monetization is data + speed, not betting.
+
+12. WHAT NOT TO BUILD
+
+❌ Auto-betting
+❌ User wallets
+❌ Account logins
+❌ “Guaranteed profit” claims
+❌ Paid APIs
+
+13. FINAL DELIVERABLES
+
+FastAPI backend
+
+React dashboard
+
+Clear README
+
+API placeholders only
+
+14. START IMMEDIATELY BY:
+
+Defining canonical data models
+
+Implementing Polymarket ingestion
+
+Building arb detection logic
+
+Rendering opportunities
+
+Do not over-engineer.
+Do not optimize prematurely.
+Do not expand scope early.
+
+END OF METAPROMPT
+
+If you want next, I can:
+• Convert this into a Cursor-optimized version
+• Add exact file structure
+• Design the math formulas explicitly
+• Create example UI wireframes
+• Or help you decide which sport to start with
+
+Just say the word.
+
+d exact fiile structure, add math formulas, 
+
+Excellent — below is a Claude-optimized extension that adds (1) an exact file structure and (2) explicit math formulas for arbitrage, EV, fees, and stake sizing.
+
+This is designed to remove all ambiguity so Claude (or any coding agent) can implement without inventing structure or math.
+
+You can append this directly to the prior metaprompt, or give it as a follow-up instruction.
+
+📁 EXACT FILE STRUCTURE + 📐 MATH SPECIFICATION
+(Claude Implementation Addendum)
+1. EXACT PROJECT FILE STRUCTURE
+
+Use this structure exactly unless a technical constraint requires deviation.
+
+arb-intel/
+│
+├── backend/
+│   ├── app/
+│   │   ├── main.py                  # FastAPI entrypoint
+│   │   ├── config.py                # API key placeholders & settings
+│   │   │
+│   │   ├── core/
+│   │   │   ├── models.py            # Pydantic canonical data models
+│   │   │   ├── normalization.py     # Team/market normalization logic
+│   │   │   ├── fees.py              # Fee & slippage models
+│   │   │   ├── math.py              # Arbitrage & EV formulas (pure)
+│   │   │   └── sizing.py            # Stake sizing logic
+│   │   │
+│   │   ├── ingestion/
+│   │   │   ├── polymarket.py        # Polymarket client
+│   │   │   ├── kalshi.py             # Kalshi client
+│   │   │   ├── manifold.py           # Manifold client
+│   │   │   ├── betfair.py            # Betfair client (read-only)
+│   │   │   └── sportsbooks.py        # Aggregator scraping logic
+│   │   │
+│   │   ├── engine/
+│   │   │   ├── scanner.py            # Orchestrates data pulls
+│   │   │   ├── arbitrage.py          # Arb detection logic
+│   │   │   ├── ev.py                 # +EV detection
+│   │   │   └── instructions.py       # Human-readable output
+│   │   │
+│   │   ├── api/
+│   │   │   ├── routes.py             # API endpoints
+│   │   │   └── websocket.py          # Real-time updates
+│   │   │
+│   │   └── utils/
+│   │       ├── odds.py               # Odds conversions
+│   │       ├── cache.py              # In-memory caching
+│   │       └── time.py               # Time utilities
+│   │
+│   └── requirements.txt
+│
+├── frontend/
+│   ├── index.html
+│   ├── src/
+│   │   ├── main.tsx
+│   │   ├── App.tsx
+│   │   ├── api.ts                    # Backend API client
+│   │   ├── types.ts                  # Shared types
+│   │   ├── components/
+│   │   │   ├── OpportunityTable.tsx
+│   │   │   ├── OpportunityCard.tsx
+│   │   │   ├── Filters.tsx
+│   │   │   └── Disclaimer.tsx
+│   │   └── styles/
+│   │       └── tailwind.css
+│   │
+│   └── vite.config.ts
+│
+└── README.md
+
+2. CONFIGURATION FILE (config.py)
+# API KEYS (PLACEHOLDERS ONLY)
+POLYMARKET_API_KEY = "PLACEHOLDER"
+KALSHI_API_KEY = "PLACEHOLDER"
+MANIFOLD_API_KEY = "PLACEHOLDER"
+BETFAIR_API_KEY = "PLACEHOLDER"
+
+SCAN_INTERVAL_SECONDS = 2
+MAX_CACHE_AGE_SECONDS = 10
+
+3. CANONICAL DATA MODELS (models.py)
+class Outcome(BaseModel):
+    name: str
+    odds_decimal: float
+    venue: str
+    liquidity: float | None
+
+class Market(BaseModel):
+    event_id: str
+    market_type: str
+    outcomes: list[Outcome]
+
+class Opportunity(BaseModel):
+    type: Literal["ARBITRAGE", "EV"]
+    expected_profit_pct: float
+    expected_profit_usd: float
+    instructions: list[str]
+    risk: str
+    expires_in_seconds: int
+
+4. ODDS CONVERSION FORMULAS (utils/odds.py)
+American → Decimal
+if odds > 0:
+    decimal = 1 + odds / 100
+else:
+    decimal = 1 + 100 / abs(odds)
+
+Decimal → Implied Probability
+probability = 1 / decimal
+
+5. ARBITRAGE DETECTION MATH (math.py)
+Two-Outcome Arbitrage Condition
+P₁ + P₂ < 1 − total_fees
+
+
+Where:
+
+Pᵢ = 1 / decimal_oddsᵢ
+
+Arbitrage Profit %
+profit_pct = (1 − (P₁ + P₂ + fees)) × 100
+
+6. STAKE SIZING FORMULAS (sizing.py)
+
+Given total capital C:
+
+stake₁ = (C × P₂) / (P₁ + P₂)
+stake₂ = (C × P₁) / (P₁ + P₂)
+
+Guaranteed Cashout
+cashout = stake₁ × decimal₁ = stake₂ × decimal₂
+
+Guaranteed Profit
+profit = cashout − C − fees
+
+7. EXPECTED VALUE FORMULA (ev.py)
+
+Using market-implied probability P_true:
+
+EV = (P_true × payout) − stake − fees
+
+EV_pct = EV / stake
+
+8. RISK MODEL (SIMPLIFIED)
+
+Worst-case single-leg fill:
+
+loss = stake × (1 − hedge_probability)
+
+
+Display as:
+• LOW
+• MEDIUM
+• HIGH
+
+9. INSTRUCTION GENERATION (instructions.py)
+
+Must output human-readable steps, not math.
+
+Example:
+
+1. Bet $238.17 on Lakers ML at DraftKings (+110)
+2. Bet $250.00 on Celtics ML at FanDuel (+105)
+Expected Profit: $11.23 (0.48%)
+
+10. PERFORMANCE RULES
+
+• All math functions must be pure
+• No blocking I/O in scan loop
+• Cache all raw data
+• UI updates via WebSocket only
+
+11. FINAL DIRECTIVE TO CLAUDE
+
+Do not invent structure.
+Do not expand scope.
+Do not add execution logic.
+
+Build exactly this system.
+
+END OF ADDENDUM

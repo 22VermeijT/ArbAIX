@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(npm install)",
+      "Bash(python -m uvicorn:*)",
+      "Bash(timeout:*)",
+      "Bash(npm run dev:*)",
+      "Bash(ping:*)",
+      "Bash(curl:*)",
+      "Bash(python -m json.tool:*)",
+      "Bash(python:*)",
+      "WebFetch(domain:trading-api.readme.io)",
+      "WebFetch(domain:docs.kalshi.com)",
+      "Bash(more:*)",
+      "WebFetch(domain:docs.manifold.markets)",
+      "Bash(findstr:*)",
+      "Bash(find:*)",
+      "Bash(git init:*)",
+      "Bash(git remote add:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
