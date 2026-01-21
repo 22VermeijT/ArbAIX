@@ -212,6 +212,46 @@ ODDS_API_KEY = "your_key_here"
 
 This system is for educational and informational purposes only. It does not constitute financial advice. All betting decisions and executions must be made by you. Odds can change rapidly. Always verify current odds before placing any bets. Gamble responsibly.
 
+## Development Status
+
+### Completed
+- Cross-platform event matching with fuzzy text similarity
+- Category normalization (politics, sports, tech, economics, etc.)
+- Outcome compatibility validation (prevents Yes/No matching with candidate names)
+- Arbitrage detection across matched events
+- +EV detection using probability anchors
+
+### Current State
+- **5 cross-platform event groups** detected per scan
+- **21 opportunities** being surfaced (mix of arbitrage and +EV)
+- Working data sources: Polymarket, Kalshi, Manifold, PredictIt
+- Sportsbook integration requires valid Odds API key
+
+### Next Steps
+
+1. **Outcome Name Normalization**
+   - Normalize outcome names across platforms (e.g., "Democratic" ↔ "Democrats" ↔ "Dem")
+   - Add team name aliases for sports (e.g., "LA Lakers" ↔ "Los Angeles Lakers")
+
+2. **Improve Event Matching**
+   - Add more entity extraction (sports teams, player names)
+   - Consider using event start times to validate matches
+   - Tune similarity threshold based on observed false positive/negative rates
+
+3. **Add Sportsbook Integration**
+   - Get valid Odds API key from https://the-odds-api.com/
+   - Test matching between prediction markets and sportsbooks
+
+4. **Validation & Testing**
+   - Verify detected opportunities are real (check actual platform odds)
+   - Add unit tests for matching logic
+   - Add integration tests with mock market data
+
+5. **Production Readiness**
+   - Add proper logging
+   - Add error handling for API failures
+   - Consider Redis for caching in multi-instance deployments
+
 ## License
 
 MIT

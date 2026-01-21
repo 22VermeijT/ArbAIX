@@ -18,7 +18,11 @@
       "Bash(find:*)",
       "Bash(git init:*)",
       "Bash(git remote add:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: ArbAIX arbitrage intelligence platform\n\n- Backend: FastAPI with async market ingestion from 6 sources\n- Frontend: React + Vite + TypeScript + Tailwind\n- Core: Event matching, arbitrage detection, +EV analysis\n- Ingestion clients: Polymarket, Kalshi, Manifold, Betfair, PredictIt, sportsbooks\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(grep:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd cross-platform event matching with category and outcome validation\n\n- Integrate matcher.py into scanner for fuzzy event matching\n- Add category normalization \\(politics, sports, tech, economics, etc.\\)\n- Allow \"prediction\" category to match politics/world/economics\n- Add outcome compatibility check \\(Yes/No won''t match candidate names\\)\n- Add debug logging for cross-platform match analysis\n- Update README with development status and next steps\n\nFixes false positives like \"LA Rams\" matching \"LA Mayor election\"\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }

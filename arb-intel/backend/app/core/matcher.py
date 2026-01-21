@@ -10,6 +10,52 @@ from typing import Optional
 from ..core.models import Market
 
 
+# Category normalization mapping
+CATEGORY_GROUPS = {
+    "politics": ["politics", "political", "election", "elections", "us-politics",
+                 "government", "congress", "senate", "presidential", "vote", "voting",
+                 "president", "governor", "mayor"],
+    "sports": ["sports", "nfl", "nba", "mlb", "nhl", "soccer", "football", "basketball",
+               "baseball", "hockey", "tennis", "golf", "mma", "ufc", "boxing",
+               "champions-league", "premier-league", "world-cup", "super-bowl"],
+    "crypto": ["crypto", "cryptocurrency", "bitcoin", "ethereum", "btc", "eth", "defi"],
+    "tech": ["tech", "technology", "ai", "artificial-intelligence", "science", "space",
+             "prediction"],  # "prediction" often used for tech/general markets
+    "economics": ["economics", "economy", "finance", "financial", "stocks", "markets",
+                  "fed", "federal-reserve", "inflation", "gdp"],
+    "entertainment": ["entertainment", "movies", "tv", "music", "oscars", "awards"],
+    "world": ["world", "international", "geopolitics", "war", "conflict"],
+}
+
+
+def normalize_category(category: str) -> str:
+    """Normalize category to canonical form for cross-platform matching."""
+    cat_lower = category.lower().replace("_", "-").replace(" ", "-")
+
+    for canonical, variants in CATEGORY_GROUPS.items():
+        for variant in variants:
+            if variant in cat_lower or cat_lower in variant:
+                return canonical
+
+    # Default to "other" if no match
+    return "other"
+
+
+def categories_match(cat1: str, cat2: str) -> bool:
+    """Check if two categories are compatible for matching."""
+    norm1 = normalize_category(cat1)
+    norm2 = normalize_category(cat2)
+
+    # "tech" includes "prediction" which is a generic catch-all used by prediction markets
+    # Allow it to match with politics since many political markets are under "prediction"
+    prediction_matches = {"tech", "politics", "world", "economics"}
+    if norm1 == "tech" or norm2 == "tech":
+        return norm1 in prediction_matches and norm2 in prediction_matches
+
+    # Require same normalized category for others
+    return norm1 == norm2
+
+
 def normalize_text(text: str) -> str:
     """Normalize text for comparison."""
     # Lowercase
@@ -113,12 +159,49 @@ def calculate_similarity(text1: str, text2: str) -> float:
     return combined
 
 
-def markets_match(market1: Market, market2: Market, threshold: float = 0.4) -> bool:
+def outcomes_compatible(market1: Market, market2: Market) -> bool:
+    """Check if outcome types are compatible for arbitrage."""
+    outcomes1 = {o.name.lower() for o in market1.outcomes}
+    outcomes2 = {o.name.lower() for o in market2.outcomes}
+
+    # Binary markets (Yes/No) - both must be binary
+    binary_outcomes = {"yes", "no"}
+    is_binary1 = outcomes1 <= binary_outcomes or outcomes1 == binary_outcomes
+    is_binary2 = outcomes2 <= binary_outcomes or outcomes2 == binary_outcomes
+
+    # If both are binary, they're compatible
+    if is_binary1 and is_binary2:
+        return True
+
+    # If one is binary and other has specific names (candidates, teams), not compatible
+    if is_binary1 != is_binary2:
+        return False
+
+    # Both have specific outcomes - check for overlap
+    # At least one outcome name should match (partial is ok)
+    for o1 in outcomes1:
+        for o2 in outcomes2:
+            # Check for substring match or exact match
+            if o1 in o2 or o2 in o1:
+                return True
+
+    return False
+
+
+def markets_match(market1: Market, market2: Market, threshold: float = 0.45) -> bool:
     """Check if two markets are about the same event."""
     # Don't match markets from the same venue
     venues1 = {o.venue for o in market1.outcomes}
     venues2 = {o.venue for o in market2.outcomes}
     if venues1 & venues2:
+        return False
+
+    # Require compatible category - critical to avoid cross-category matches
+    if not categories_match(market1.sport, market2.sport):
+        return False
+
+    # Require compatible outcomes - Yes/No shouldn't match candidate names
+    if not outcomes_compatible(market1, market2):
         return False
 
     # Calculate similarity
@@ -140,7 +223,7 @@ def create_canonical_event_id(markets: list[Market]) -> str:
 
 def find_matching_markets(
     markets: list[Market],
-    threshold: float = 0.4
+    threshold: float = 0.45
 ) -> dict[str, list[Market]]:
     """
     Group markets that are about the same event.

@@ -11,6 +11,7 @@ from datetime import datetime
 from typing import Callable, Awaitable
 
 from ..core.models import Market, Opportunity, ScanResult
+from ..core.matcher import find_matching_markets
 from ..utils.cache import market_cache
 from ..utils.time import Timer
 from ..config import SCAN_INTERVAL_SECONDS
@@ -111,20 +112,13 @@ class MarketScanner:
         markets: list[Market]
     ) -> dict[str, list[Market]]:
         """
-        Group markets by canonical event ID.
+        Group markets by canonical event ID using fuzzy matching.
 
         Markets from different venues with same event get grouped
-        for cross-venue arbitrage detection.
+        for cross-venue arbitrage detection using similarity matching.
         """
-        groups: dict[str, list[Market]] = {}
-
-        for market in markets:
-            event_id = market.event_id
-            if event_id not in groups:
-                groups[event_id] = []
-            groups[event_id].append(market)
-
-        return groups
+        # Use fuzzy matcher to group same events across platforms
+        return find_matching_markets(markets)
 
     async def scan_once(self) -> ScanResult:
         """
@@ -152,6 +146,40 @@ class MarketScanner:
 
         # Group by event for cross-venue analysis
         event_groups = self._group_markets_by_event(markets)
+
+        # Debug: count cross-platform matches
+        cross_platform_count = 0
+        for event_id, group in event_groups.items():
+            venues = set()
+            for m in group:
+                for o in m.outcomes:
+                    venues.add(o.venue)
+            if len(venues) > 1:
+                cross_platform_count += 1
+                if cross_platform_count <= 3:  # Show first 3 examples
+                    print(f"  Cross-platform match: {event_id[:50]}...")
+                    print(f"    Venues: {venues}")
+                    for m in group[:2]:
+                        outcomes_str = ", ".join(o.name for o in m.outcomes[:3])
+                        print(f"    {m.outcomes[0].venue} [{m.sport}]: {outcomes_str}")
+
+        print(f"Cross-platform groups: {cross_platform_count} / {len(event_groups)} total")
+
+        # Debug: Show sample of unmatched markets per venue
+        if cross_platform_count < 5:
+            venue_samples: dict[str, list[str]] = {}
+            venue_categories: dict[str, set[str]] = {}
+            for m in markets:
+                venue = m.outcomes[0].venue if m.outcomes else "unknown"
+                if venue not in venue_samples:
+                    venue_samples[venue] = []
+                    venue_categories[venue] = set()
+                venue_categories[venue].add(m.sport)
+                if len(venue_samples[venue]) < 2:
+                    venue_samples[venue].append(f"{m.event_name[:50]}... [{m.sport}]")
+            print("Venue categories:")
+            for venue, cats in venue_categories.items():
+                print(f"  {venue}: {list(cats)[:5]}")
 
         # Find opportunities
         opportunities = []
