@@ -2,6 +2,20 @@
 
 import type { Opportunity } from '../types';
 
+// Prediction market URLs
+const VENUE_URLS: Record<string, string> = {
+  polymarket: 'https://polymarket.com',
+  kalshi: 'https://kalshi.com',
+  manifold: 'https://manifold.markets',
+  predictit: 'https://www.predictit.org',
+  betfair: 'https://www.betfair.com',
+};
+
+// Check if venue is a prediction market (vs sportsbook)
+const isPredictionMarket = (venue: string): boolean => {
+  return ['polymarket', 'kalshi', 'manifold', 'predictit', 'betfair'].includes(venue.toLowerCase());
+};
+
 interface OpportunityCardProps {
   opportunity: Opportunity;
   onClose: () => void;
@@ -62,25 +76,46 @@ export function OpportunityCard({ opportunity, onClose }: OpportunityCardProps) 
         <div className="bg-gray-900 rounded p-4">
           <h4 className="text-sm font-semibold text-gray-400 mb-3">BET INSTRUCTIONS</h4>
           <div className="space-y-3">
-            {opportunity.instructions.map((inst, idx) => (
-              <div key={idx} className="flex items-start gap-3">
-                <span className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm flex-shrink-0">
-                  {inst.step}
-                </span>
-                <div className="flex-1">
-                  <p className="font-medium">
-                    Bet <span className="text-green-400">${inst.stake_usd.toFixed(2)}</span> on{' '}
-                    <span className="text-blue-300">{inst.outcome}</span>
-                  </p>
-                  <p className="text-sm text-gray-400">
-                    at {inst.venue.charAt(0).toUpperCase() + inst.venue.slice(1)} ({inst.odds_american})
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Potential payout: ${inst.potential_payout.toFixed(2)}
-                  </p>
+            {opportunity.instructions.map((inst, idx) => {
+              const venueKey = inst.venue.toLowerCase();
+              const venueUrl = VENUE_URLS[venueKey];
+              const showLink = isPredictionMarket(venueKey);
+
+              return (
+                <div key={idx} className="flex items-start gap-3">
+                  <span className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm flex-shrink-0">
+                    {inst.step}
+                  </span>
+                  <div className="flex-1">
+                    <p className="font-medium">
+                      Bet <span className="text-green-400">${inst.stake_usd.toFixed(2)}</span> on{' '}
+                      <span className="text-blue-300">{inst.outcome}</span>
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm text-gray-400">
+                        at {inst.venue.charAt(0).toUpperCase() + inst.venue.slice(1)} ({inst.odds_american})
+                      </p>
+                      {showLink && venueUrl && (
+                        <a
+                          href={venueUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded transition-colors"
+                        >
+                          Go to Site
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </a>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Potential payout: ${inst.potential_payout.toFixed(2)}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
